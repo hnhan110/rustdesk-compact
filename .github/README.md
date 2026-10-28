@@ -56,4 +56,4 @@ Issues and pull requests about the compact main window are welcome; see [CONTRIB
 
 ## License
 
-AGPL-3.0, the same as RustDesk (see [LICENSE](../LICENSE)). RustDesk is developed by the RustDesk team; this project only changes the main window.
+AGPL-3.0, the same as RustDesk (see [LICENCE](../LICENCE)). RustDesk is developed by the RustDesk team; this project only changes the main window.
