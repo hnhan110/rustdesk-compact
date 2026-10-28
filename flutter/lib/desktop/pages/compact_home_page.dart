@@ -174,6 +174,7 @@ class _CompactHomePageState extends State<CompactHomePage> {
   }
 
   Widget _buildVersion(BuildContext context, Color? mutedColor) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       children: [
         Expanded(
@@ -181,6 +182,22 @@ class _CompactHomePageState extends State<CompactHomePage> {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(fontSize: 12, color: mutedColor)),
         ),
+        if (isOptionFixed(kCommConfKeyTheme) != true)
+          Tooltip(
+            message: translate(isDark ? 'Light' : 'Dark'),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(6),
+              onTap: () => MyTheme.changeDarkMode(
+                  isDark ? ThemeMode.light : ThemeMode.dark),
+              child: Icon(
+                      isDark
+                          ? Icons.light_mode_outlined
+                          : Icons.dark_mode_outlined,
+                      size: 16,
+                      color: mutedColor)
+                  .paddingAll(4),
+            ),
+          ),
         Tooltip(
           message: translate('Check for updates'),
           child: InkWell(

@@ -9,6 +9,7 @@
 - One row per device: online status, name and ID, with connect and file transfer buttons on hover and the usual ⋮ menu.
 - Online devices first, sorted by name (natural order, so "9" comes before "10") or by ID, and an "Online only" filter.
 - Your own ID and one-time password in the status bar.
+- A light/dark theme switch under the sidebar ("Follow system" stays in Settings → General).
 - The version is shown under the sidebar. The app checks this repository's releases shortly after it starts and every 12 hours; when a newer one exists it asks before updating. Updating downloads the exe, checks its SHA-256 against the release's `SHA256SUMS.txt`, and runs it with `--update` after the Windows permission prompt. "Skip this version" stops the automatic prompt for that release; the button next to the version checks by hand.
 - New connections start fitted to the window, with the remote cursor shown and the VP9 codec. These defaults are set once, on first start; change them any time in Settings → Display. Devices you connected to before keep the view settings saved for them.
 
