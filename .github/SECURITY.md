@@ -6,7 +6,7 @@ Only the latest release gets fixes. Each release is built on one RustDesk versio
 
 ## What to report here
 
-Vulnerabilities in the code this project adds: the compact main window (`flutter/lib/desktop/pages/compact_home_page.dart`, `flutter/lib/common/widgets/compact_peer_row.dart` and their hooks) and the build workflow (`.github/workflows/compact-windows.yml`).
+Vulnerabilities in the code this project adds: the compact main window (`flutter/lib/desktop/pages/compact_home_page.dart`, `flutter/lib/common/widgets/compact_peer_row.dart` and their hooks), the update check and installer launch (`flutter/lib/desktop/pages/compact_update.dart`) and the build workflow (`.github/workflows/compact-windows.yml`).
 
 Everything else is RustDesk code, including the protocol, encryption, remote sessions, file transfer and servers. Report those to RustDesk as described in [their security policy](https://github.com/rustdesk/rustdesk/security/policy).
 

@@ -38,6 +38,16 @@ jobs:
   generate-bridge:
     runs-on: ubuntu-22.04
     steps:
+      # The in-app update check only understands <x.y.z>-compact.<n>.
+      - name: Check release tag
+        if: inputs.publish
+        shell: bash
+        run: |
+          if [[ ! "${{ inputs.release-tag }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-compact\.[0-9]+$ ]]; then
+            echo "::error::release-tag must look like 1.5.0-compact.3 when publishing"
+            exit 1
+          fi
+
       - name: Checkout source code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
@@ -151,6 +161,8 @@ jobs:
           flutter pub get
           flutter analyze --no-fatal-infos --no-fatal-warnings \
             lib/desktop/pages/compact_home_page.dart \
+            lib/desktop/pages/compact_update.dart \
+            lib/desktop/pages/compact_release.dart \
             lib/desktop/pages/desktop_home_page.dart \
             lib/common/widgets/peer_card.dart \
             lib/common/widgets/peers_view.dart
@@ -242,6 +254,12 @@ jobs:
             exit 1
           fi
         shell: bash
+
+      - name: Stamp release tag
+        shell: bash
+        run: |
+          sed -i "s/^const kCompactRelease = .*/const kCompactRelease = '${{ inputs.release-tag }}';/" flutter/lib/desktop/pages/compact_release.dart
+          grep kCompactRelease flutter/lib/desktop/pages/compact_release.dart
 
       - name: Build rustdesk
         run: |

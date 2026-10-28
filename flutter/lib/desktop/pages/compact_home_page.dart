@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hbb/common.dart';
@@ -5,6 +7,8 @@ import 'package:flutter_hbb/common/widgets/login.dart';
 import 'package:flutter_hbb/common/widgets/peer_card.dart';
 import 'package:flutter_hbb/common/widgets/peers_view.dart';
 import 'package:flutter_hbb/consts.dart';
+import 'package:flutter_hbb/desktop/pages/compact_release.dart';
+import 'package:flutter_hbb/desktop/pages/compact_update.dart';
 import 'package:flutter_hbb/desktop/pages/connection_page.dart';
 import 'package:flutter_hbb/models/ab_model.dart';
 import 'package:flutter_hbb/models/peer_model.dart';
@@ -51,6 +55,7 @@ class _CompactHomePageState extends State<CompactHomePage> {
   final _favoriteView = FavoritePeersView(menuPadding: kDesktopMenuPadding);
   final _abView = AddressBookPeersView(menuPadding: kDesktopMenuPadding);
   final _showPassword = false.obs;
+  Timer? _updateTimer;
 
   bool get _abEnabled => gFFI.peerTabModel.isEnabled[PeerTabIndex.ab.index];
 
@@ -66,6 +71,11 @@ class _CompactHomePageState extends State<CompactHomePage> {
     }
     peerSearchText.value = '';
     peerSearchTextController.clear();
+    _updateTimer = Timer(const Duration(seconds: 10), () {
+      compactCheckForUpdate(manual: false);
+      _updateTimer = Timer.periodic(const Duration(hours: 12),
+          (_) => compactCheckForUpdate(manual: false));
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final model = gFFI.peerTabModel;
       final tab = model.currentTab;
@@ -80,6 +90,12 @@ class _CompactHomePageState extends State<CompactHomePage> {
         }
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _updateTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -148,7 +164,40 @@ class _CompactHomePageState extends State<CompactHomePage> {
     return Container(
       width: _sidebarWidth,
       color: Theme.of(context).colorScheme.background,
-      child: Consumer<PeerTabModel>(
+      child: Column(
+        children: [
+          Expanded(child: _buildNavigation(context, sectionLabel, mutedColor)),
+          _buildVersion(context, mutedColor),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVersion(BuildContext context, Color? mutedColor) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text('${translate('Version')} $kCompactRelease',
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12, color: mutedColor)),
+        ),
+        Tooltip(
+          message: translate('Check for updates'),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(6),
+            onTap: () => compactCheckForUpdate(manual: true),
+            child: Icon(Icons.system_update_alt, size: 16, color: mutedColor)
+                .paddingAll(4),
+          ),
+        ),
+      ],
+    ).paddingOnly(left: 18, right: 10, top: 4, bottom: 8);
+  }
+
+  Widget _buildNavigation(BuildContext context,
+      Widget Function(String, {Widget? trailing}) sectionLabel,
+      Color? mutedColor) {
+    return Consumer<PeerTabModel>(
         builder: (context, model, _) => Obx(() {
           final current = model.currentTab;
           final currentAb = gFFI.abModel.currentName.value;
@@ -210,9 +259,7 @@ class _CompactHomePageState extends State<CompactHomePage> {
               ],
             ],
           );
-        }),
-      ),
-    );
+        }));
   }
 
   Widget _navItem(BuildContext context,

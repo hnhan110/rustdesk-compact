@@ -9,6 +9,7 @@
 - One row per device: online status, name and ID, with connect and file transfer buttons on hover and the usual ⋮ menu.
 - Online devices first, sorted by name (natural order, so "9" comes before "10") or by ID, and an "Online only" filter.
 - Your own ID and one-time password in the status bar.
+- The version is shown under the sidebar. The app checks this repository's releases shortly after it starts and every 12 hours; when a newer one exists it asks before updating. Updating downloads the exe, checks its SHA-256 against the release's `SHA256SUMS.txt`, and runs it with `--update` after the Windows permission prompt. "Skip this version" stops the automatic prompt for that release; the button next to the version checks by hand.
 - New connections start fitted to the window, with the remote cursor shown and the VP9 codec. These defaults are set once, on first start; change them any time in Settings → Display. Devices you connected to before keep the view settings saved for them.
 
 Builds are Windows x64 only.
@@ -27,6 +28,8 @@ The protocol and configuration are those of the upstream tag, so a build works w
 |---|---|
 | `flutter/lib/desktop/pages/compact_home_page.dart` | new: the compact main window |
 | `flutter/lib/common/widgets/compact_peer_row.dart` | new, part of `peer_card.dart`: one-line rows and name sorting |
+| `flutter/lib/desktop/pages/compact_update.dart` | new: update check and install; `kCompactRepo` names the repository it reads releases from, so forks change it |
+| `flutter/lib/desktop/pages/compact_release.dart` | new: the release tag, written by the build workflow (`dev` in source) |
 | `flutter/lib/desktop/pages/desktop_home_page.dart` | 2 lines: import and show the compact window |
 | `flutter/lib/common/widgets/peer_card.dart` | 3 lines: `part` directive and the row hook |
 | `flutter/lib/common/widgets/peers_view.dart` | 10 lines: row height, no margins, sorting |
@@ -39,7 +42,7 @@ No Rust code, configuration or version number is changed.
 
 ## Build
 
-Actions → **Windows build** → Run workflow with a `release-tag` such as `1.5.0-compact.1` (raise the last number to rebuild the same upstream version). Untick `publish` to build without creating a release; the exe is then kept as a workflow artifact. The `dart-check` job reports Dart errors within minutes.
+Actions → **Windows build** → Run workflow with a `release-tag` such as `1.5.0-compact.1` (raise the last number to rebuild the same upstream version). Published tags must have this form, because the update check compares them. Every published release is offered to installed copies, so try changes with `publish` off first. Untick `publish` to build without creating a release; the exe is then kept as a workflow artifact. The `dart-check` job reports Dart errors within minutes.
 
 The first build of an upstream version takes about an hour: it compiles the C/C++ libraries (vcpkg), generates the Rust–Dart bridge and compiles all of RustDesk. Later builds reuse those from the Actions cache. GitHub drops cache entries unused for 7 days, so the first build after a long pause is slow again.
 
