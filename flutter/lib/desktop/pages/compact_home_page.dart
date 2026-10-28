@@ -11,6 +11,7 @@ import 'package:flutter_hbb/desktop/pages/compact_release.dart';
 import 'package:flutter_hbb/desktop/pages/compact_update.dart';
 import 'package:flutter_hbb/desktop/pages/connection_page.dart';
 import 'package:flutter_hbb/models/ab_model.dart';
+import 'package:flutter_hbb/models/compact_view_style.dart';
 import 'package:flutter_hbb/models/peer_model.dart';
 import 'package:flutter_hbb/models/peer_tab_model.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
@@ -39,6 +40,28 @@ void _applyCompactDisplayDefaults() {
   bind.setLocalFlutterOption(k: _kCompactDisplayDefaultsApplied, v: 'Y');
 }
 
+const _kCompactScaleDownDefaultApplied = 'compact-scale-down-default-v1';
+
+/// Scale down as the default view style, set once: on first start, or on
+/// update while the default is still Scale adaptive. Runs before
+/// [_applyCompactDisplayDefaults], whose adaptive default may not be saved
+/// yet when read back on first start.
+void _applyCompactScaleDownDefault() {
+  if (bind.getLocalFlutterOption(k: _kCompactScaleDownDefaultApplied) ==
+      'Y') {
+    return;
+  }
+  final firstStart =
+      bind.getLocalFlutterOption(k: _kCompactDisplayDefaultsApplied) != 'Y';
+  if (isOptionFixed(kOptionViewStyle) != true &&
+      (firstStart ||
+          bind.mainGetUserDefaultOption(key: kOptionViewStyle) ==
+              kRemoteViewStyleAdaptive)) {
+    bind.setLocalFlutterOption(k: kCompactOptionScaleDownDefault, v: 'Y');
+  }
+  bind.setLocalFlutterOption(k: _kCompactScaleDownDefaultApplied, v: 'Y');
+}
+
 /// Compact main window: lists on the left, one box that both searches the
 /// list and takes a remote ID, and the peer list filling the rest.
 class CompactHomePage extends StatefulWidget {
@@ -64,6 +87,7 @@ class _CompactHomePageState extends State<CompactHomePage> {
     super.initState();
     compactPeerRows = true;
     peerCardUiType.value = PeerUiType.list;
+    _applyCompactScaleDownDefault();
     _applyCompactDisplayDefaults();
     final sort = bind.getLocalFlutterOption(k: kCompactOptionSort);
     if (sort.startsWith(kCompactSortName) || sort.startsWith(kCompactSortId)) {

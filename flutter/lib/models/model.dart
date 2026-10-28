@@ -15,6 +15,7 @@ import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/models/ab_model.dart';
 import 'package:flutter_hbb/models/chat_model.dart';
 import 'package:flutter_hbb/models/cm_file_model.dart';
+import 'package:flutter_hbb/models/compact_view_style.dart';
 import 'package:flutter_hbb/models/file_model.dart';
 import 'package:flutter_hbb/models/group_model.dart';
 import 'package:flutter_hbb/models/peer_model.dart';
@@ -2158,6 +2159,7 @@ class ViewStyle {
       ).hashCode;
 
   double get scale {
+    if (style == kCompactViewStyleScaleDown) return compactScaleDownScale(this);
     double s = 1.0;
     if (style == kRemoteViewStyleAdaptive) {
       if (width != 0 &&
@@ -4181,6 +4183,7 @@ class FFI {
     }
     if (isDesktop && connType == ConnType.defaultConn) {
       textureModel.updateCurrentDisplay(display ?? 0);
+      compactApplyScaleDownDefault(sessionId);
     }
     // FIXME: separate cameras displays or shift all indices.
     if (isDesktop && connType == ConnType.viewCamera) {

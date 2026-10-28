@@ -165,7 +165,12 @@ jobs:
             lib/desktop/pages/compact_release.dart \
             lib/desktop/pages/desktop_home_page.dart \
             lib/common/widgets/peer_card.dart \
-            lib/common/widgets/peers_view.dart
+            lib/common/widgets/peers_view.dart \
+            lib/models/compact_view_style.dart \
+            lib/models/model.dart \
+            lib/common/widgets/toolbar.dart \
+            lib/desktop/pages/remote_page.dart \
+            lib/desktop/pages/desktop_setting_page.dart
 
   build-windows:
     needs: [build-RustDeskTempTopMostWindow, generate-bridge]

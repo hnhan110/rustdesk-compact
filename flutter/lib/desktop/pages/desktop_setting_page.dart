@@ -13,6 +13,7 @@ import 'package:flutter_hbb/desktop/pages/desktop_home_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_tab_page.dart';
 import 'package:flutter_hbb/desktop/widgets/remote_toolbar.dart';
 import 'package:flutter_hbb/mobile/widgets/dialog.dart';
+import 'package:flutter_hbb/models/compact_view_style.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:flutter_hbb/models/printer_model.dart';
 import 'package:flutter_hbb/models/server_model.dart';
@@ -1959,11 +1960,11 @@ class _DisplayState extends State<_Display> {
   Widget viewStyle(BuildContext context) {
     final isOptFixed = isOptionFixed(kOptionViewStyle);
     onChanged(String value) async {
-      await bind.mainSetUserDefaultOption(key: kOptionViewStyle, value: value);
+      await compactSetDefaultViewStyle(value);
       setState(() {});
     }
 
-    final groupValue = bind.mainGetUserDefaultOption(key: kOptionViewStyle);
+    final groupValue = compactGetDefaultViewStyle();
     return _Card(title: 'Default View Style', children: [
       _Radio(context,
           value: kRemoteViewStyleOriginal,
@@ -1974,6 +1975,11 @@ class _DisplayState extends State<_Display> {
           value: kRemoteViewStyleAdaptive,
           groupValue: groupValue,
           label: 'Scale adaptive',
+          onChanged: isOptFixed ? null : onChanged),
+      _Radio(context,
+          value: kCompactViewStyleScaleDown,
+          groupValue: groupValue,
+          label: 'Scale down',
           onChanged: isOptFixed ? null : onChanged),
     ]);
   }

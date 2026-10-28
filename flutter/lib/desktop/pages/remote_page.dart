@@ -15,6 +15,7 @@ import '../../common.dart';
 import '../../common/widgets/dialog.dart';
 import '../../common/widgets/toolbar.dart';
 import '../../models/model.dart';
+import '../../models/compact_view_style.dart';
 import '../../models/input_model.dart';
 import '../../models/platform_model.dart';
 import '../../common/shared_state.dart';
@@ -1108,7 +1109,9 @@ class _ImagePaintState extends State<ImagePaint> {
     // Read the live DPR while the canvas's post-frame update is pending.
     final dpr = MediaQuery.devicePixelRatioOf(context);
 
-    bool isViewOriginal() => c.viewStyle.style == kRemoteViewStyleOriginal;
+    bool isViewOriginal() =>
+        c.viewStyle.style == kRemoteViewStyleOriginal ||
+        compactScaleDownAtOriginal(c);
 
     mouseRegion({child}) => Obx(() {
           double getCursorScale() {
