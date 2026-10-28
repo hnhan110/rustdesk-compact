@@ -31,6 +31,7 @@ The protocol and configuration are those of the upstream tag, so a build works w
 | `flutter/lib/common/widgets/peers_view.dart` | 10 lines: row height, no margins, sorting |
 | `.github/workflows/compact-windows.yml` | new: builds the Windows x64 exe and publishes a release |
 | `.github/README.md`, `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` | new: this project's pages, shown instead of RustDesk's copies in `docs/` |
+| `.github/pull_request_template.md` | new: pull request checklist |
 | `.github/ISSUE_TEMPLATE/` | replaced: issue forms for this project |
 
 No Rust code, configuration or version number is changed.
