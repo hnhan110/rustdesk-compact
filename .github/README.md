@@ -30,7 +30,8 @@ The protocol and configuration are those of the upstream tag, so a build works w
 | `flutter/lib/common/widgets/peer_card.dart` | 3 lines: `part` directive and the row hook |
 | `flutter/lib/common/widgets/peers_view.dart` | 10 lines: row height, no margins, sorting |
 | `.github/workflows/compact-windows.yml` | new: builds the Windows x64 exe and publishes a release |
-| `.github/README.md` | this file |
+| `.github/README.md`, `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` | new: this project's pages, shown instead of RustDesk's copies in `docs/` |
+| `.github/ISSUE_TEMPLATE/` | replaced: issue forms for this project |
 
 No Rust code, configuration or version number is changed.
 
@@ -45,9 +46,13 @@ gh workflow run compact-windows.yml -R hnhan110/rustdesk-compact --ref main -f r
 ## Moving to a new upstream version
 
 1. `git fetch https://github.com/rustdesk/rustdesk.git tag <tag> --no-tags`
-2. `git merge <tag>` on `main`. Conflicts, if any, are in the hooks listed above.
+2. `git merge <tag>` on `main`. Conflicts, if any, are in the hooks or issue forms listed above.
 3. Compare the x64 steps of `build-for-windows-flutter` in `.github/workflows/flutter-build.yml` with `compact-windows.yml` (FLUTTER_VERSION, VCPKG_COMMIT_ID, RUST_VERSION, VERSION and the steps themselves).
 4. Push and run the workflow with `release-tag=<tag>-compact.1`.
+
+## Contributing
+
+Issues and pull requests about the compact main window are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). Report security problems privately as described in [SECURITY.md](SECURITY.md).
 
 ## License
 

@@ -1,55 +1,61 @@
-name: 🐞 Bug report
-description: Thanks for taking the time to fill out this bug report! Please fill the form in **English**
+name: Bug report
+description: Something is wrong in the compact main window
 labels: ["bug"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        This project only changes the main window of RustDesk. Problems with connecting, the remote session, file transfer, the server or mobile apps also happen in official RustDesk; please report those to [RustDesk](https://github.com/rustdesk/rustdesk/issues).
   - type: textarea
     id: desc
     attributes:
-      label: Bug Description
-      description: A clear and concise description of what the bug is (if it's a keyboard issue, provide the keyboard mode you're using. e.g. legacy, map, translate)
+      label: What happened
+      description: A clear description of the problem.
     validations:
       required: true
   - type: textarea
     id: reproduce
     attributes:
-      label: How to Reproduce
-      description: What steps can we take to reproduce this behavior?
+      label: Steps to reproduce
     validations:
       required: true
   - type: textarea
     id: expected
     attributes:
-      label: Expected Behavior
-      description: A clear and concise description of what you expected to happen
-    validations:
-      required: true
-  - type: input
-    id: os
-    attributes:
-      label: Operating system(s) on local (controlling) side and remote (controlled) side
-      description: What operating system(s) do you see this bug on? local (controlling) side -> remote (controlled) side.
-      placeholder: |
-        Windows 10 -> osx
+      label: Expected behavior
     validations:
       required: true
   - type: input
     id: version
     attributes:
-      label: RustDesk Version(s) on local (controlling) side and remote (controlled) side
-      description: What RustDesk version(s) do you see this bug on? local (controlling) side -> remote (controlled) side.
-      placeholder: |
-        1.1.9 -> 1.1.8
+      label: Release
+      description: The release you installed, as shown on the Releases page.
+      placeholder: 1.5.0-compact.1
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Windows version
+      placeholder: Windows 11 24H2
+    validations:
+      required: true
+  - type: dropdown
+    id: official
+    attributes:
+      label: Does the same thing happen in official RustDesk of the same version?
+      options:
+        - "No, only in this build"
+        - "Yes, also in official RustDesk"
+        - "I have not checked"
     validations:
       required: true
   - type: textarea
     id: screenshots
     attributes:
       label: Screenshots
-      description: Please add screenshots to help explain your problem, if applicable, please upload video.
-    validations:
-      required: true
+      description: Hide IDs, passwords and names you do not want to share.
   - type: textarea
     id: context
     attributes:
-      label: Additional Context
-      description: Add any additonal context about the problem here
+      label: Additional context
