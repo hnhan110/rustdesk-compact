@@ -38,7 +38,9 @@ No Rust code, configuration or version number is changed.
 
 ## Build
 
-Actions → **Windows build** → Run workflow with a `release-tag` such as `1.5.0-compact.1` (raise the last number to rebuild the same upstream version). A run takes about an hour, longer the first time while the vcpkg cache is empty. The `dart-check` job reports Dart errors within minutes.
+Actions → **Windows build** → Run workflow with a `release-tag` such as `1.5.0-compact.1` (raise the last number to rebuild the same upstream version). Untick `publish` to build without creating a release; the exe is then kept as a workflow artifact. The `dart-check` job reports Dart errors within minutes.
+
+The first build of an upstream version takes about an hour: it compiles the C/C++ libraries (vcpkg), generates the Rust–Dart bridge and compiles all of RustDesk. Later builds reuse those from the Actions cache. GitHub drops cache entries unused for 7 days, so the first build after a long pause is slow again.
 
 ```bash
 gh workflow run compact-windows.yml -R hnhan110/rustdesk-compact --ref main -f release-tag=1.5.0-compact.1

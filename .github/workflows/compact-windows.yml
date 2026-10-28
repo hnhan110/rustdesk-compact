@@ -9,6 +9,10 @@ on:
       release-tag:
         description: "Release tag, e.g. 1.5.0-compact.1"
         required: true
+      publish:
+        description: "Publish the release (off: build and keep the exe as a workflow artifact only)"
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -18,13 +22,91 @@ env:
   SCITER_RUST_VERSION: "1.75"
   LLVM_VERSION: "15.0.6"
   FLUTTER_VERSION: "3.24.5"
-  VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+  # Upstream's x-gha provider saved no vcpkg packages in this repo's runs; a
+  # files cache saved with actions/cache does.
+  VCPKG_BINARY_SOURCES: 'clear;files,C:\vcpkg-bincache,readwrite'
   VCPKG_COMMIT_ID: "9e593bb18ea69cc5095e012465dcd675a822ed0d"
   VERSION: "1.5.0"
+  # From bridge.yml; only the default bridge (Flutter 3.22.3) is needed for x64.
+  CARGO_EXPAND_VERSION: "1.0.95"
+  FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
+  BRIDGE_FLUTTER_VERSION: "3.22.3"
 
 jobs:
+  # bridge.yml's default job, with its output cached on the Rust sources:
+  # the bridge only changes when Rust changes, which this project never does.
   generate-bridge:
-    uses: ./.github/workflows/bridge.yml
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          submodules: recursive
+
+      - name: Restore generated bridge
+        id: cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ./src/bridge_generated.rs
+            ./src/bridge_generated.io.rs
+            ./flutter/lib/generated_bridge.dart
+            ./flutter/lib/generated_bridge.freezed.dart
+            ./flutter/macos/Runner/bridge_generated.h
+            ./flutter/ios/Runner/bridge_generated.h
+          key: bridge-${{ env.FLUTTER_RUST_BRIDGE_VERSION }}-${{ env.BRIDGE_FLUTTER_VERSION }}-${{ hashFiles('src/**/*.rs', 'libs/**/*.rs', 'Cargo.toml', 'Cargo.lock', 'flutter/pubspec.yaml') }}
+
+      - name: Install prerequisites
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get install ca-certificates -y
+          sudo apt-get update -y
+          sudo apt-get install -y clang cmake curl gcc git g++ libclang-dev libgtk-3-dev llvm-dev nasm ninja-build pkg-config wget
+
+      - name: Install Rust toolchain
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          targets: x86_64-unknown-linux-gnu
+          components: "rustfmt"
+
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          prefix-key: bridge-ubuntu-22.04
+
+      - name: Install flutter
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: "stable"
+          flutter-version: ${{ env.BRIDGE_FLUTTER_VERSION }}
+          cache: true
+
+      - name: Generate bridge
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          cargo install cargo-expand --version ${{ env.CARGO_EXPAND_VERSION }} --locked
+          cargo install flutter_rust_bridge_codegen --version ${{ env.FLUTTER_RUST_BRIDGE_VERSION }} --features "uuid" --locked
+          # Flutter 3.22.3: extended_text 14 needs a newer Dart, so downgrade for resolution.
+          sed -i -e 's/extended_text: 14.0.0/extended_text: 13.0.0/g' flutter/pubspec.yaml
+          pushd flutter && flutter pub get && popd
+          ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart --c-output ./flutter/macos/Runner/bridge_generated.h
+          cp ./flutter/macos/Runner/bridge_generated.h ./flutter/ios/Runner/bridge_generated.h
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: bridge-artifact
+          path: |
+            ./src/bridge_generated.rs
+            ./src/bridge_generated.io.rs
+            ./flutter/lib/generated_bridge.dart
+            ./flutter/lib/generated_bridge.freezed.dart
+            ./flutter/macos/Runner/bridge_generated.h
+            ./flutter/ios/Runner/bridge_generated.h
 
   build-RustDeskTempTopMostWindow:
     uses: ./.github/workflows/third-party-RustDeskTempTopMostWindow.yml
@@ -77,13 +159,6 @@ jobs:
     needs: [build-RustDeskTempTopMostWindow, generate-bridge]
     runs-on: windows-2022
     steps:
-      - name: Export GitHub Actions cache environment variables
-        uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6
-        with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-
       - name: Checkout source code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
@@ -134,17 +209,25 @@ jobs:
         with:
           prefix-key: windows-2022
 
-      - name: Setup vcpkg with Github Actions binary cache
+      - name: Setup vcpkg
         uses: lukka/run-vcpkg@b1a0dd252f06b9e25b3c022a9a03bd7a427fb6a2 # v11
         with:
           vcpkgDirectory: C:\vcpkg
           vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
           doNotCache: false
 
+      - name: Restore vcpkg binary packages
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: C:\vcpkg-bincache
+          key: vcpkg-x64-windows-static-${{ env.VCPKG_COMMIT_ID }}-${{ hashFiles('vcpkg.json', 'res/vcpkg/**') }}
+          restore-keys: vcpkg-x64-windows-static-${{ env.VCPKG_COMMIT_ID }}-
+
       - name: Install vcpkg dependencies
         env:
           VCPKG_DEFAULT_HOST_TRIPLET: x64-windows-static
         run: |
+          mkdir -p "C:/vcpkg-bincache"
           if ! $VCPKG_ROOT/vcpkg \
             install \
             --triplet x64-windows-static \
@@ -228,6 +311,7 @@ jobs:
           path: ./SignOutput
 
       - name: Publish release
+        if: inputs.publish
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
