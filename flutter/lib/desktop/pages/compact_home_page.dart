@@ -14,6 +14,27 @@ import 'package:flutter_hbb/models/server_model.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
+const _kCompactDisplayDefaultsApplied = 'compact-display-defaults-v1';
+
+/// Display defaults for new connections: fit to window, the remote cursor
+/// shown, VP9. Applied once, so changes in Settings → Display stick.
+void _applyCompactDisplayDefaults() {
+  if (bind.getLocalFlutterOption(k: _kCompactDisplayDefaultsApplied) == 'Y') {
+    return;
+  }
+  const defaults = {
+    kOptionViewStyle: kRemoteViewStyleAdaptive,
+    kOptionShowRemoteCursor: 'Y',
+    kOptionCodecPreference: 'vp9',
+  };
+  defaults.forEach((key, value) {
+    if (isOptionFixed(key) != true) {
+      bind.mainSetUserDefaultOption(key: key, value: value);
+    }
+  });
+  bind.setLocalFlutterOption(k: _kCompactDisplayDefaultsApplied, v: 'Y');
+}
+
 /// Compact main window: lists on the left, one box that both searches the
 /// list and takes a remote ID, and the peer list filling the rest.
 class CompactHomePage extends StatefulWidget {
@@ -38,6 +59,7 @@ class _CompactHomePageState extends State<CompactHomePage> {
     super.initState();
     compactPeerRows = true;
     peerCardUiType.value = PeerUiType.list;
+    _applyCompactDisplayDefaults();
     final sort = bind.getLocalFlutterOption(k: kCompactOptionSort);
     if (sort.startsWith(kCompactSortName) || sort.startsWith(kCompactSortId)) {
       compactSortMode.value = sort;
