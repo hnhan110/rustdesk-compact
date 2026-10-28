@@ -249,6 +249,9 @@ class _PeersViewState extends State<_PeersView>
               // No need to listen the currentTab change event.
               // Because the currentTab change event will trigger the peers change event,
               // and the peers change event will trigger _buildPeersView().
+              if (compactPeerRows && !isPortrait) {
+                return SizedBox(height: kCompactRowHeight, child: visibilityChild);
+              }
               return !isPortrait
                   ? Obx(() => peerCardUiType.value == PeerUiType.list
                       ? Container(height: 45, child: visibilityChild)
@@ -276,6 +279,9 @@ class _PeersViewState extends State<_PeersView>
                         controller: _scrollController,
                         itemCount: peers.length,
                         itemBuilder: (BuildContext context, int index) {
+                          if (compactPeerRows) {
+                            return buildOnePeer(peers[index], false);
+                          }
                           return buildOnePeer(peers[index], false).marginOnly(
                               right: space,
                               top: index == 0 ? 0 : space / 2,
@@ -390,6 +396,10 @@ class _PeersViewState extends State<_PeersView>
           peers.sort((p1, p2) => p1.online ? -1 : 1);
           break;
       }
+    }
+
+    if (compactPeerRows) {
+      peers = compactSortPeers(peers, widget.peers.loadEvent == LoadEvent.recent);
     }
 
     searchText = searchText.trim();
