@@ -14,7 +14,7 @@
 - A "Scale down" view style: the remote screen shrinks to fit a smaller window, and a larger window shows it at 100%, centred and sharp, instead of enlarging it. It is in a session's Display menu and among the default view styles in Settings → Display.
 - The normal arrow instead of RustDesk's blue dot while the remote side has sent no cursor shape, which it does not while its pointer is hidden (no mouse plugged in, for one).
 - An Install button at the bottom of the sidebar when the exe runs without being installed ("Click to upgrade" over an older installed version), as the stock window has in its left pane.
-- Drag files or folders from Explorer onto a remote screen to send them. The file transfer window for that device opens, and they go to the folder its remote pane shows (the last one you used there, or the home folder), with the usual progress list and the usual question when a file exists already.
+- Drag files or folders from Explorer onto a remote screen to send them. The file transfer window for that device opens, and they go to the folder its remote pane shows (the last one you used there, or the home folder), with the usual progress list and the usual question when a file exists already. Dropping them on that remote pane does the same (RustDesk's own drop zone there received nothing on Windows).
 - New connections start with Scale down, the remote cursor shown, the VP9 codec and file copy and paste on (Ctrl+C a file in Explorer on one side, Ctrl+V in Explorer on the other, Windows to Windows). These defaults are set once, on first start or on updating from an earlier build (1.5.0-compact.2 meant to set them but kept only one); change them any time in Settings → Display. Each device you connected to before is brought to them once, at its next connection: Scale original or adaptive becomes Scale down, and the remote cursor and file copy and paste are turned on, each while it is the default. Scale custom stays, and what you change for a device afterwards is kept.
 
 Builds are Windows x64 only.
@@ -38,6 +38,8 @@ The protocol and configuration are those of the upstream tag, so a build works w
 | `flutter/lib/desktop/pages/compact_file_drop.dart` | new: files dropped on a remote screen, sent through the file transfer window |
 | `flutter/lib/desktop/pages/desktop_home_page.dart` | 5 lines: imports, show the compact window, pass dropped files on |
 | `flutter/lib/desktop/pages/file_manager_tab_page.dart` | 3 lines: import and the dropped-files hook |
+| `flutter/lib/desktop/pages/file_manager_page.dart` | 3 lines: import, and the remote pane's drop handler calls the same code (RustDesk's sent the files the wrong way) |
+| `flutter/windows/runner/flutter_window.cpp` | 3 lines: the drop plugin for the remote and file transfer windows; RustDesk registers it for the main window only |
 | `flutter/lib/common/widgets/peer_card.dart` | 3 lines: `part` directive and the row hook |
 | `flutter/lib/common/widgets/peers_view.dart` | 10 lines: row height, no margins, sorting |
 | `flutter/lib/models/compact_view_style.dart` | new: the "Scale down" view style and the display defaults for each device |

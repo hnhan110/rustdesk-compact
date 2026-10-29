@@ -121,33 +121,46 @@ Future<void> _relayDroppedFiles(String args) async {
 /// shows, once that tab has connected and read both panes.
 bool compactReceiveDroppedFiles(String args) {
   final a = jsonDecode(args);
-  unawaited(_sendDroppedFiles(a['id'], List<String>.from(a['files'])));
+  final String id = a['id'];
+  unawaited(_sendDroppedFiles(
+      () => Get.isRegistered<FFI>(tag: 'ft_$id')
+          ? Get.find<FFI>(tag: 'ft_$id').fileModel
+          : null,
+      List<String>.from(a['files'])));
   return true;
+}
+
+/// File transfer window: files dropped on a tab's remote pane go the same
+/// way, so folders arrive with their empty folders too.
+void compactSendDroppedFiles(FileModel model, List<String> files) {
+  unawaited(_sendDroppedFiles(() => model, files));
 }
 
 // FileType of the protocol: 1 is a directory, 4 a file.
 const _kEntryTypeDir = 1;
 const _kEntryTypeFile = 4;
 
-Future<void> _sendDroppedFiles(String id, List<String> files) async {
+Future<void> _sendDroppedFiles(
+    FileModel? Function() find, List<String> files) async {
+  final paths = files.where((p) => p.isNotEmpty).toList(growable: false);
+  if (paths.isEmpty) return;
   FileModel? model;
   for (var i = 0; i < 120; i++) {
-    if (Get.isRegistered<FFI>(tag: 'ft_$id')) {
-      final m = Get.find<FFI>(tag: 'ft_$id').fileModel;
-      if (m.localController.directory.value.path.isNotEmpty &&
-          m.remoteController.directory.value.path.isNotEmpty) {
-        model = m;
-        break;
-      }
+    final m = find();
+    if (m != null &&
+        m.localController.directory.value.path.isNotEmpty &&
+        m.remoteController.directory.value.path.isNotEmpty) {
+      model = m;
+      break;
     }
     await Future.delayed(const Duration(milliseconds: 250));
   }
   if (model == null) {
-    debugPrint('compact drop: file transfer to $id is not ready');
+    debugPrint('compact drop: the file transfer is not ready');
     return;
   }
   final byFolder = <String, List<String>>{};
-  for (final f in files) {
+  for (final f in paths) {
     byFolder.putIfAbsent(path.dirname(f), () => []).add(f);
   }
   for (final e in byFolder.entries) {

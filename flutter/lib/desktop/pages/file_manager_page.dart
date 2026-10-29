@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:math';
 
 import 'package:extended_text/extended_text.dart';
 import 'package:flutter_hbb/common/widgets/dialog.dart';
+import 'package:flutter_hbb/desktop/pages/compact_file_drop.dart';
 import 'package:flutter_hbb/desktop/widgets/dragable_divider.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:desktop_drop/desktop_drop.dart';
@@ -404,16 +404,8 @@ class _FileManagerPageState extends State<FileManagerPage>
       // ignore local
       return;
     }
-    final items = SelectedItems(isLocal: false);
-    for (var file in details.files) {
-      final f = File(file.path);
-      items.add(Entry()
-        ..path = file.path
-        ..name = file.name
-        ..size = FileSystemEntity.isDirectorySync(f.path) ? 0 : f.lengthSync());
-    }
-    final otherSideData = model.localController.directoryData();
-    model.remoteController.sendFiles(items, otherSideData);
+    compactSendDroppedFiles(
+        model, details.files.map((f) => f.path).toList(growable: false));
   }
 }
 
