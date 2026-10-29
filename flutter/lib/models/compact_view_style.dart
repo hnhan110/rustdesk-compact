@@ -16,6 +16,7 @@ const kCompactViewStyleScaleDown = 'compact-scale-down';
 /// so a Scale down default is stored as adaptive plus this flag.
 const kCompactOptionScaleDownDefault = 'compact-default-scale-down';
 const _kPeerOptionDefaultsApplied = 'compact-display-defaults';
+const _kPeerOptionCopyPasteApplied = 'compact-file-copy-paste';
 
 double _originalScale(double devicePixelRatio) =>
     kIgnoreDpi ? 1.0 / devicePixelRatio : 1.0;
@@ -60,6 +61,7 @@ Future<void> compactSetDefaultViewStyle(String style) async {
 /// remote cursor hidden, as 1.5.0-compact.2 lost those defaults. Scale custom
 /// stays, and what is picked for a device afterwards is kept.
 Future<void> compactApplyDisplayDefaults(SessionID sessionId, String id) async {
+  await _applyFileCopyPasteDefault(sessionId);
   final applied = await bind.sessionGetOption(
       sessionId: sessionId, arg: _kPeerOptionDefaultsApplied);
   if (applied == 'Y') return;
@@ -81,4 +83,21 @@ Future<void> compactApplyDisplayDefaults(SessionID sessionId, String id) async {
   }
   await bind.sessionPeerOption(
       sessionId: sessionId, name: _kPeerOptionDefaultsApplied, value: 'Y');
+}
+
+/// File copy and paste is stored with each device, so devices saved before
+/// the default was set keep it off; each is turned on once while it is the
+/// default, and what is picked for a device afterwards is kept.
+Future<void> _applyFileCopyPasteDefault(SessionID sessionId) async {
+  final applied = await bind.sessionGetOption(
+      sessionId: sessionId, arg: _kPeerOptionCopyPasteApplied);
+  if (applied == 'Y') return;
+  if (bind.mainGetUserDefaultOption(key: kOptionEnableFileCopyPaste) == 'Y' &&
+      !bind.sessionGetToggleOptionSync(
+          sessionId: sessionId, arg: kOptionEnableFileCopyPaste)) {
+    await bind.sessionToggleOption(
+        sessionId: sessionId, value: kOptionEnableFileCopyPaste);
+  }
+  await bind.sessionPeerOption(
+      sessionId: sessionId, name: _kPeerOptionCopyPasteApplied, value: 'Y');
 }

@@ -48,6 +48,29 @@ Future<void> _applyCompactDisplayDefaults() async {
       k: _kCompactDisplayDefaultsApplied, v: 'Y');
 }
 
+const _kCompactFileCopyPasteDefaultApplied = 'compact-file-copy-paste-default';
+
+/// File copy and paste on for new connections, also applied once.
+Future<void> _applyCompactFileCopyPasteDefault() async {
+  if (bind.getLocalFlutterOption(k: _kCompactFileCopyPasteDefaultApplied) ==
+      'Y') {
+    return;
+  }
+  if (isOptionFixed(kOptionEnableFileCopyPaste) != true) {
+    await bind.mainSetUserDefaultOption(
+        key: kOptionEnableFileCopyPaste, value: 'Y');
+  }
+  await bind.setLocalFlutterOption(
+      k: _kCompactFileCopyPasteDefaultApplied, v: 'Y');
+}
+
+// Each write loads, changes and stores the whole defaults file, so the two
+// passes run one after the other.
+Future<void> _applyCompactDefaults() async {
+  await _applyCompactDisplayDefaults();
+  await _applyCompactFileCopyPasteDefault();
+}
+
 /// Compact main window: lists on the left, one box that both searches the
 /// list and takes a remote ID, and the peer list filling the rest.
 class CompactHomePage extends StatefulWidget {
@@ -73,7 +96,7 @@ class _CompactHomePageState extends State<CompactHomePage> {
     super.initState();
     compactPeerRows = true;
     peerCardUiType.value = PeerUiType.list;
-    _applyCompactDisplayDefaults();
+    _applyCompactDefaults();
     final sort = bind.getLocalFlutterOption(k: kCompactOptionSort);
     if (sort.startsWith(kCompactSortName) || sort.startsWith(kCompactSortId)) {
       compactSortMode.value = sort;
