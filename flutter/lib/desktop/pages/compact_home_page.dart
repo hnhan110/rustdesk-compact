@@ -16,50 +16,36 @@ import 'package:flutter_hbb/models/peer_model.dart';
 import 'package:flutter_hbb/models/peer_tab_model.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:flutter_hbb/models/server_model.dart';
+import 'package:flutter_hbb/utils/multi_window_manager.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
-const _kCompactDisplayDefaultsApplied = 'compact-display-defaults-v1';
+// v1, in 1.5.0-compact.2, sent all three writes at once; each one loads,
+// changes and stores the whole defaults file, so only the last was kept.
+// v2 applies them again, one at a time.
+const _kCompactDisplayDefaultsApplied = 'compact-display-defaults-v2';
 
-/// Display defaults for new connections: fit to window, the remote cursor
-/// shown, VP9. Applied once, so changes in Settings → Display stick.
-void _applyCompactDisplayDefaults() {
+/// Display defaults for new connections: Scale down, the remote cursor shown,
+/// VP9. Applied once, so changes in Settings → Display stick.
+Future<void> _applyCompactDisplayDefaults() async {
   if (bind.getLocalFlutterOption(k: _kCompactDisplayDefaultsApplied) == 'Y') {
     return;
   }
   const defaults = {
-    kOptionViewStyle: kRemoteViewStyleAdaptive,
+    kOptionViewStyle: kCompactViewStyleScaleDown,
     kOptionShowRemoteCursor: 'Y',
     kOptionCodecPreference: 'vp9',
   };
-  defaults.forEach((key, value) {
-    if (isOptionFixed(key) != true) {
-      bind.mainSetUserDefaultOption(key: key, value: value);
+  for (final e in defaults.entries) {
+    if (isOptionFixed(e.key) == true) continue;
+    if (e.key == kOptionViewStyle) {
+      await compactSetDefaultViewStyle(e.value);
+    } else {
+      await bind.mainSetUserDefaultOption(key: e.key, value: e.value);
     }
-  });
-  bind.setLocalFlutterOption(k: _kCompactDisplayDefaultsApplied, v: 'Y');
-}
-
-const _kCompactScaleDownDefaultApplied = 'compact-scale-down-default-v1';
-
-/// Scale down as the default view style, set once: on first start, or on
-/// update while the default is still Scale adaptive. Runs before
-/// [_applyCompactDisplayDefaults], whose adaptive default may not be saved
-/// yet when read back on first start.
-void _applyCompactScaleDownDefault() {
-  if (bind.getLocalFlutterOption(k: _kCompactScaleDownDefaultApplied) ==
-      'Y') {
-    return;
   }
-  final firstStart =
-      bind.getLocalFlutterOption(k: _kCompactDisplayDefaultsApplied) != 'Y';
-  if (isOptionFixed(kOptionViewStyle) != true &&
-      (firstStart ||
-          bind.mainGetUserDefaultOption(key: kOptionViewStyle) ==
-              kRemoteViewStyleAdaptive)) {
-    bind.setLocalFlutterOption(k: kCompactOptionScaleDownDefault, v: 'Y');
-  }
-  bind.setLocalFlutterOption(k: _kCompactScaleDownDefaultApplied, v: 'Y');
+  await bind.setLocalFlutterOption(
+      k: _kCompactDisplayDefaultsApplied, v: 'Y');
 }
 
 /// Compact main window: lists on the left, one box that both searches the
@@ -87,7 +73,6 @@ class _CompactHomePageState extends State<CompactHomePage> {
     super.initState();
     compactPeerRows = true;
     peerCardUiType.value = PeerUiType.list;
-    _applyCompactScaleDownDefault();
     _applyCompactDisplayDefaults();
     final sort = bind.getLocalFlutterOption(k: kCompactOptionSort);
     if (sort.startsWith(kCompactSortName) || sort.startsWith(kCompactSortId)) {
@@ -191,10 +176,42 @@ class _CompactHomePageState extends State<CompactHomePage> {
       child: Column(
         children: [
           Expanded(child: _buildNavigation(context, sectionLabel, mutedColor)),
+          _buildInstall(),
           _buildVersion(context, mutedColor),
         ],
       ),
     );
+  }
+
+  /// The stock home page offers these in its left pane, which this window
+  /// replaces: without them a downloaded exe only runs portable.
+  Widget _buildInstall() {
+    if (!isWindows || bind.isDisableInstallation()) return const SizedBox();
+    final String label;
+    final bool Function() action;
+    if (!bind.mainIsInstalled()) {
+      label = 'Install';
+      action = bind.mainGotoInstall;
+    } else if (bind.mainIsInstalledLowerVersion()) {
+      label = 'Click to upgrade';
+      action = bind.mainUpdateMe;
+    } else {
+      return const SizedBox();
+    }
+    return Tooltip(
+      message: translate('install_tip'),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          icon: const Icon(Icons.install_desktop, size: 18),
+          label: Text(translate(label), overflow: TextOverflow.ellipsis),
+          onPressed: () async {
+            await rustDeskWinManager.closeAllSubWindows();
+            action();
+          },
+        ),
+      ),
+    ).paddingOnly(left: 10, right: 10, top: 8);
   }
 
   Widget _buildVersion(BuildContext context, Color? mutedColor) {

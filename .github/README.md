@@ -12,13 +12,15 @@
 - A light/dark theme switch under the sidebar ("Follow system" stays in Settings → General).
 - The version is shown under the sidebar. The app checks this repository's releases shortly after it starts and every 12 hours; when a newer one exists it asks before updating. Updating downloads the exe, checks its SHA-256 against the release's `SHA256SUMS.txt`, and runs it with `--update` after the Windows permission prompt. "Skip this version" stops the automatic prompt for that release; the button next to the version checks by hand.
 - A "Scale down" view style: the remote screen shrinks to fit a smaller window, and a larger window shows it at 100%, centred and sharp, instead of enlarging it. It is in a session's Display menu and among the default view styles in Settings → Display.
-- New connections start with Scale down, the remote cursor shown and the VP9 codec. These defaults are set once, on first start, and Scale down also once on updating from a build without it, if the default was Scale adaptive; change them any time in Settings → Display. Devices you connected to before keep the view settings saved for them, except that while Scale down is the default, a device on Scale adaptive is switched to it once, at its next connection.
+- The normal arrow instead of RustDesk's blue dot while the remote side has sent no cursor shape, which it does not while its pointer is hidden (no mouse plugged in, for one).
+- An Install button at the bottom of the sidebar when the exe runs without being installed ("Click to upgrade" over an older installed version), as the stock window has in its left pane.
+- New connections start with Scale down, the remote cursor shown and the VP9 codec. These defaults are set once, on first start or on updating from an earlier build (1.5.0-compact.2 meant to set them but kept only one); change them any time in Settings → Display. Each device you connected to before is brought to them once, at its next connection: Scale original or adaptive becomes Scale down, and the remote cursor is turned on, each while it is the default. Scale custom stays, and what you change for a device afterwards is kept.
 
 Builds are Windows x64 only.
 
 ## Download
 
-[Releases](https://github.com/hnhan110/rustdesk-compact/releases) contain `rustdesk-<version>-compact.<n>-x86_64.exe` and `SHA256SUMS.txt`. The exe is the same kind of installer as the official `rustdesk-<version>-x86_64.exe`: run it, or install with `--silent-install`. Builds are not code-signed.
+[Releases](https://github.com/hnhan110/rustdesk-compact/releases) contain `rustdesk-<version>-compact.<n>-x86_64.exe` and `SHA256SUMS.txt`. The exe is the same kind of installer as the official `rustdesk-<version>-x86_64.exe`: run it and press Install in the sidebar, or install with `--silent-install`. Builds are not code-signed.
 
 The protocol and configuration are those of the upstream tag, so a build works with official RustDesk clients and servers of the same version. Turn automatic updates off on the installed client (`rustdesk.exe --option allow-auto-update N`, as administrator), otherwise the updater replaces it with the official build.
 
@@ -35,10 +37,10 @@ The protocol and configuration are those of the upstream tag, so a build works w
 | `flutter/lib/desktop/pages/desktop_home_page.dart` | 2 lines: import and show the compact window |
 | `flutter/lib/common/widgets/peer_card.dart` | 3 lines: `part` directive and the row hook |
 | `flutter/lib/common/widgets/peers_view.dart` | 10 lines: row height, no margins, sorting |
-| `flutter/lib/models/compact_view_style.dart` | new: the "Scale down" view style and its default |
-| `flutter/lib/models/model.dart` | 3 lines: import, the scale hook, the default on session start |
+| `flutter/lib/models/compact_view_style.dart` | new: the "Scale down" view style and the display defaults for each device |
+| `flutter/lib/models/model.dart` | 3 lines: import, the scale hook, the defaults on session start |
 | `flutter/lib/common/widgets/toolbar.dart` | 7 lines: import and the menu entry |
-| `flutter/lib/desktop/pages/remote_page.dart` | 4 lines: import, unfiltered drawing at 100% |
+| `flutter/lib/desktop/pages/remote_page.dart` | 6 lines: import, unfiltered drawing at 100%, the arrow without a cursor shape |
 | `flutter/lib/desktop/pages/desktop_setting_page.dart` | 8 lines: import, Scale down as a default view style |
 | `.github/workflows/compact-windows.yml` | new: builds the Windows x64 exe and publishes a release |
 | `.github/README.md`, `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` | new: this project's pages, shown instead of RustDesk's copies in `docs/` |

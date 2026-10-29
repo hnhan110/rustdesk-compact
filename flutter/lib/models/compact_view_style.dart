@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter_hbb/common.dart';
+import 'package:flutter_hbb/common/shared_state.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/models/model.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
@@ -14,7 +15,7 @@ const kCompactViewStyleScaleDown = 'compact-scale-down';
 /// The Rust side only accepts original or adaptive as the default view style,
 /// so a Scale down default is stored as adaptive plus this flag.
 const kCompactOptionScaleDownDefault = 'compact-default-scale-down';
-const _kPeerOptionDefaultChecked = 'compact-scale-down-default';
+const _kPeerOptionDefaultsApplied = 'compact-display-defaults';
 
 double _originalScale(double devicePixelRatio) =>
     kIgnoreDpi ? 1.0 / devicePixelRatio : 1.0;
@@ -54,21 +55,30 @@ Future<void> compactSetDefaultViewStyle(String style) async {
       k: kCompactOptionScaleDownDefault, v: scaleDown ? 'Y' : '');
 }
 
-/// With the Scale down default, a device on Scale adaptive (which is what the
-/// stored default gives it) is switched once; a style picked for it later in
-/// the session menu is kept.
-Future<void> compactApplyScaleDownDefault(SessionID sessionId) async {
-  if (bind.getLocalFlutterOption(k: kCompactOptionScaleDownDefault) != 'Y') {
-    return;
+/// Brings each device to the display defaults once, at its first connection
+/// with this build: devices saved earlier mostly kept Scale original with the
+/// remote cursor hidden, as 1.5.0-compact.2 lost those defaults. Scale custom
+/// stays, and what is picked for a device afterwards is kept.
+Future<void> compactApplyDisplayDefaults(SessionID sessionId, String id) async {
+  final applied = await bind.sessionGetOption(
+      sessionId: sessionId, arg: _kPeerOptionDefaultsApplied);
+  if (applied == 'Y') return;
+  if (bind.getLocalFlutterOption(k: kCompactOptionScaleDownDefault) == 'Y') {
+    final style = await bind.sessionGetViewStyle(sessionId: sessionId);
+    if (style == kRemoteViewStyleAdaptive ||
+        style == kRemoteViewStyleOriginal) {
+      await bind.sessionSetViewStyle(
+          sessionId: sessionId, value: kCompactViewStyleScaleDown);
+    }
   }
-  final checked = await bind.sessionGetOption(
-      sessionId: sessionId, arg: _kPeerOptionDefaultChecked);
-  if (checked == 'Y') return;
-  final style = await bind.sessionGetViewStyle(sessionId: sessionId);
-  if (style == kRemoteViewStyleAdaptive) {
-    await bind.sessionSetViewStyle(
-        sessionId: sessionId, value: kCompactViewStyleScaleDown);
+  if (bind.mainGetUserDefaultOption(key: kOptionShowRemoteCursor) == 'Y' &&
+      !bind.sessionGetToggleOptionSync(
+          sessionId: sessionId, arg: 'show-remote-cursor')) {
+    await bind.sessionToggleOption(
+        sessionId: sessionId, value: 'show-remote-cursor');
+    // The session page read the toggle when it opened.
+    ShowRemoteCursorState.find(id).value = true;
   }
   await bind.sessionPeerOption(
-      sessionId: sessionId, name: _kPeerOptionDefaultChecked, value: 'Y');
+      sessionId: sessionId, name: _kPeerOptionDefaultsApplied, value: 'Y');
 }

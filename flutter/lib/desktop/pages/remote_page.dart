@@ -1336,6 +1336,8 @@ class _ImagePaintState extends State<ImagePaint> {
 
   MouseCursor _buildCustomCursor(BuildContext context, double scale) {
     final cursor = Provider.of<CursorModel>(context);
+    // Compact: no shape from a peer whose pointer is hidden; arrow, not a dot.
+    if (cursor.cache == null) return SystemMouseCursors.basic;
     final cache = cursor.cache ?? preDefaultCursor.cache;
     return buildCursorOfCache(cursor, scale, cache);
   }

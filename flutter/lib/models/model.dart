@@ -4183,7 +4183,7 @@ class FFI {
     }
     if (isDesktop && connType == ConnType.defaultConn) {
       textureModel.updateCurrentDisplay(display ?? 0);
-      compactApplyScaleDownDefault(sessionId);
+      compactApplyDisplayDefaults(sessionId, id);
     }
     // FIXME: separate cameras displays or shift all indices.
     if (isDesktop && connType == ConnType.viewCamera) {
