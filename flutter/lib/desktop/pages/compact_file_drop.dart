@@ -5,9 +5,13 @@ import 'dart:io';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hbb/common.dart';
+import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/models/file_model.dart';
+import 'package:flutter_hbb/models/input_model.dart';
 import 'package:flutter_hbb/models/model.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
+import 'package:flutter_hbb/native/compact_file_clipboard.dart'
+    if (dart.library.html) 'package:flutter_hbb/web/compact_file_clipboard.dart';
 import 'package:flutter_hbb/utils/multi_window_manager.dart';
 import 'package:get/get.dart';
 import 'package:path/path.dart' as path;
@@ -22,8 +26,9 @@ import 'package:path/path.dart' as path;
 /// reads (current display, permissions).
 const kCompactWindowDropFiles = 'compact_drop_files';
 
-/// Wraps the remote screen: files dragged from the desktop onto it are sent
-/// to the peer through the file transfer window.
+/// Wraps the remote screen: files dragged from the desktop onto it are pasted
+/// where they land through the session's file copy and paste or, when that
+/// cannot carry them, sent to the peer through the file transfer window.
 class CompactFileDrop extends StatefulWidget {
   final FFI ffi;
   final String id;
@@ -50,13 +55,42 @@ class _CompactFileDropState extends State<CompactFileDrop> {
         .where((p) => p.isNotEmpty)
         .toList(growable: false);
     if (files.isEmpty) return;
-    final connToken =
-        bind.sessionGetConnToken(sessionId: widget.ffi.sessionId);
-    rustDeskWinManager.call(
-        WindowType.Main,
-        kCompactWindowDropFiles,
-        jsonEncode(
-            {'id': widget.id, 'connToken': connToken, 'files': files}));
+    if (_fileClipboardOn(widget.ffi)) {
+      unawaited(_pasteOnPeer(files, details.globalPosition));
+    } else {
+      _sendThroughFileTransfer(files);
+    }
+  }
+
+  /// Explorer on the peer takes the files from the session's file clipboard
+  /// and shows its own copy window: a click at the drop point focuses the
+  /// window there, and Ctrl+V pastes into it.
+  Future<void> _pasteOnPeer(List<String> files, Offset at) async {
+    if (!await compactSetClipboardFiles(files)) {
+      _sendThroughFileTransfer(files);
+      return;
+    }
+    final input = widget.ffi.inputModel;
+    input.handleMouse(InputModel.getMouseEventMove(), at);
+    await input.tap(MouseButtons.left);
+    // The clipboard watcher sends the file list from its own thread; give it
+    // and the click a moment to reach the peer before the paste.
+    await Future.delayed(const Duration(milliseconds: 600));
+    await bind.sessionInputKey(
+        sessionId: widget.ffi.sessionId,
+        name: 'v',
+        down: false,
+        press: true,
+        alt: false,
+        ctrl: true,
+        shift: false,
+        command: false);
+  }
+
+  void _sendThroughFileTransfer(List<String> files) {
+    final connToken = bind.sessionGetConnToken(sessionId: widget.ffi.sessionId);
+    rustDeskWinManager.call(WindowType.Main, kCompactWindowDropFiles,
+        jsonEncode({'id': widget.id, 'connToken': connToken, 'files': files}));
   }
 
   @override
@@ -90,6 +124,26 @@ class _CompactFileDropState extends State<CompactFileDrop> {
             )),
     ]);
   }
+}
+
+/// Whether the session's file copy and paste can carry the files: the
+/// conditions under which the toolbar offers that switch, and the switch.
+bool _fileClipboardOn(FFI ffi) {
+  final ffiModel = ffi.ffiModel;
+  final pi = ffiModel.pi;
+  if (!isWindows || ffi.connType != ConnType.defaultConn) return false;
+  if (!ffiModel.keyboard ||
+      ffiModel.viewOnly ||
+      ffiModel.permissions['file'] == false) {
+    return false;
+  }
+  final supported = versionCmp(pi.version, '1.2.4') < 0
+      ? pi.platform == kPeerPlatformWindows
+      : bind.mainHasFileClipboard() &&
+          pi.platformAdditions.containsKey(kPlatformAdditionsHasFileClipboard);
+  return supported &&
+      bind.sessionGetToggleOptionSync(
+          sessionId: ffi.sessionId, arg: kOptionEnableFileCopyPaste);
 }
 
 /// Main window: opens or raises the peer's file transfer tab, then hands the
