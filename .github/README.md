@@ -14,6 +14,7 @@
 - A "Scale down" view style: the remote screen shrinks to fit a smaller window, and a larger window shows it at 100%, centred and sharp, instead of enlarging it. It is in a session's Display menu and among the default view styles in Settings → Display.
 - The normal arrow instead of RustDesk's blue dot while the remote side has sent no cursor shape, which it does not while its pointer is hidden (no mouse plugged in, for one).
 - An Install button at the bottom of the sidebar when the exe runs without being installed ("Click to upgrade" over an older installed version), as the stock window has in its left pane.
+- Drag files or folders from Explorer onto a remote screen to send them. The file transfer window for that device opens, and they go to the folder its remote pane shows (the last one you used there, or the home folder), with the usual progress list and the usual question when a file exists already.
 - New connections start with Scale down, the remote cursor shown and the VP9 codec. These defaults are set once, on first start or on updating from an earlier build (1.5.0-compact.2 meant to set them but kept only one); change them any time in Settings → Display. Each device you connected to before is brought to them once, at its next connection: Scale original or adaptive becomes Scale down, and the remote cursor is turned on, each while it is the default. Scale custom stays, and what you change for a device afterwards is kept.
 
 Builds are Windows x64 only.
@@ -34,13 +35,15 @@ The protocol and configuration are those of the upstream tag, so a build works w
 | `flutter/lib/common/widgets/compact_peer_row.dart` | new, part of `peer_card.dart`: one-line rows and name sorting |
 | `flutter/lib/desktop/pages/compact_update.dart` | new: update check and install; `kCompactRepo` names the repository it reads releases from, so forks change it |
 | `flutter/lib/desktop/pages/compact_release.dart` | new: the release tag, written by the build workflow (`dev` in source) |
-| `flutter/lib/desktop/pages/desktop_home_page.dart` | 2 lines: import and show the compact window |
+| `flutter/lib/desktop/pages/compact_file_drop.dart` | new: files dropped on a remote screen, sent through the file transfer window |
+| `flutter/lib/desktop/pages/desktop_home_page.dart` | 5 lines: imports, show the compact window, pass dropped files on |
+| `flutter/lib/desktop/pages/file_manager_tab_page.dart` | 3 lines: import and the dropped-files hook |
 | `flutter/lib/common/widgets/peer_card.dart` | 3 lines: `part` directive and the row hook |
 | `flutter/lib/common/widgets/peers_view.dart` | 10 lines: row height, no margins, sorting |
 | `flutter/lib/models/compact_view_style.dart` | new: the "Scale down" view style and the display defaults for each device |
 | `flutter/lib/models/model.dart` | 3 lines: import, the scale hook, the defaults on session start |
 | `flutter/lib/common/widgets/toolbar.dart` | 7 lines: import and the menu entry |
-| `flutter/lib/desktop/pages/remote_page.dart` | 6 lines: import, unfiltered drawing at 100%, the arrow without a cursor shape |
+| `flutter/lib/desktop/pages/remote_page.dart` | 11 lines: imports, unfiltered drawing at 100%, the arrow without a cursor shape, the drop area around the remote screen |
 | `flutter/lib/desktop/pages/desktop_setting_page.dart` | 8 lines: import, Scale down as a default view style |
 | `.github/workflows/compact-windows.yml` | new: builds the Windows x64 exe and publishes a release |
 | `.github/README.md`, `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` | new: this project's pages, shown instead of RustDesk's copies in `docs/` |

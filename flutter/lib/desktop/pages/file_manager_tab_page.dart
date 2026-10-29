@@ -6,6 +6,7 @@ import 'package:flutter_hbb/common.dart';
 import 'package:flutter_hbb/common/widgets/dialog.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/models/state_model.dart';
+import 'package:flutter_hbb/desktop/pages/compact_file_drop.dart';
 import 'package:flutter_hbb/desktop/pages/file_manager_page.dart';
 import 'package:flutter_hbb/desktop/widgets/tabbar_widget.dart';
 import 'package:flutter_hbb/utils/multi_window_manager.dart';
@@ -96,6 +97,8 @@ class _FileManagerTabPageState extends State<FileManagerTabPage> {
               forceRelay: args['forceRelay'],
               connToken: args['connToken'],
             )));
+      } else if (call.method == kCompactWindowDropFiles) {
+        return compactReceiveDroppedFiles(call.arguments);
       } else if (call.method == "onDestroy") {
         tabController.clear();
       } else if (call.method == kWindowActionRebuild) {

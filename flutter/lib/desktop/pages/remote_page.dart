@@ -23,6 +23,7 @@ import '../../utils/image.dart';
 import '../widgets/remote_toolbar.dart';
 import '../widgets/kb_layout_type_chooser.dart';
 import '../widgets/tabbar_widget.dart';
+import 'compact_file_drop.dart';
 import 'macos_full_screen_focus_recovery.dart';
 
 import 'package:flutter_hbb/native/custom_cursor.dart'
@@ -744,7 +745,10 @@ class _RemotePageState extends State<RemotePage>
                     }
                   },
                   inputModel: _ffi.inputModel,
-                  child: getBodyForDesktop(context))),
+                  child: CompactFileDrop(
+                      ffi: _ffi,
+                      id: widget.id,
+                      child: getBodyForDesktop(context)))),
           Stack(
             children: [
               _ffi.ffiModel.pi.isSet.isTrue &&

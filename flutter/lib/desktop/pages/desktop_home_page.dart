@@ -9,6 +9,7 @@ import 'package:flutter_hbb/common.dart';
 import 'package:flutter_hbb/common/widgets/animated_rotation_widget.dart';
 import 'package:flutter_hbb/common/widgets/custom_password.dart';
 import 'package:flutter_hbb/consts.dart';
+import 'package:flutter_hbb/desktop/pages/compact_file_drop.dart';
 import 'package:flutter_hbb/desktop/pages/compact_home_page.dart';
 import 'package:flutter_hbb/desktop/pages/connection_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_setting_page.dart';
@@ -803,6 +804,8 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           forceRelay: call.arguments['forceRelay'],
           connToken: call.arguments['connToken'],
         );
+      } else if (call.method == kCompactWindowDropFiles) {
+        compactRelayDroppedFiles(call.arguments);
       } else if (call.method == kWindowBumpMouse) {
         return RdPlatformChannel.instance.bumpMouse(
           dx: call.arguments['dx'],
