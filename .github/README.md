@@ -59,6 +59,8 @@ No Rust code, configuration or version number is changed.
 
 Actions → **Windows build** → Run workflow with a `release-tag` such as `1.5.0-compact.1` (raise the last number to rebuild the same upstream version). Published tags must have this form, because the update check compares them. Every published release is offered to installed copies, so try changes with `publish` off first. Untick `publish` to build without creating a release; the exe is then kept as a workflow artifact. The `dart-check` job reports Dart errors within minutes.
 
+Name an unpublished build after the release it leads to plus a beta number, such as `1.5.0-compact.4-beta.1`. A copy installed from it is never prompted on its own, since the update check ignores tags of any other form, and a manual check still offers the published release. Reusing the coming release tag would make that copy look up to date once the release is out.
+
 The first build of an upstream version takes about an hour: it compiles the C/C++ libraries (vcpkg), generates the Rust–Dart bridge and compiles all of RustDesk. Later builds reuse those from the Actions cache. GitHub drops cache entries unused for 7 days, so the first build after a long pause is slow again.
 
 ```bash
