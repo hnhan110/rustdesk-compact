@@ -3808,7 +3808,7 @@ class CursorModel with ChangeNotifier {
 
   /// Update the cursor position.
   updateCursorPosition(Map<String, dynamic> evt, String id) async {
-    if (!isConnIn2Secs()) {
+    if (!isConnIn2Secs() && kCompactPeerMouseTakesControl) {
       gotMouseControl = false;
       _lastPeerMouse = DateTime.now();
     }

@@ -15,6 +15,15 @@ const kCompactViewStyleScaleDown = 'compact-scale-down';
 /// The Rust side only accepts original or adaptive as the default view style,
 /// so a Scale down default is stored as adaptive plus this flag.
 const kCompactOptionScaleDownDefault = 'compact-default-scale-down';
+/// The remote side reports its pointer position only while the remote cursor
+/// is shown, and RustDesk takes each report for someone there taking the
+/// mouse: local input is dropped for a second, then until a single move of
+/// more than [kMouseControlDistance]. Shown by default here, it cost clicks
+/// whenever the remote pointer moved by itself (a nudged mouse, a busy remote
+/// side reporting late), so the reports only move the cursor drawn, and input
+/// behaves as with the remote cursor hidden.
+const kCompactPeerMouseTakesControl = false;
+
 const _kPeerOptionDefaultsApplied = 'compact-display-defaults';
 const _kPeerOptionCopyPasteApplied = 'compact-file-copy-paste';
 
