@@ -38,6 +38,7 @@ The protocol and configuration are those of the upstream tag, so a build works w
 | `flutter/lib/desktop/pages/compact_release.dart` | new: the release tag, written by the build workflow (`dev` in source) |
 | `flutter/lib/desktop/pages/compact_file_drop.dart` | new: files dropped on a remote screen, pasted through the file clipboard or sent through the file transfer window |
 | `flutter/lib/native/compact_file_clipboard.dart`, `flutter/lib/web/compact_file_clipboard.dart` | new: puts the dropped files on the Windows clipboard, and the stub for the web build |
+| `flutter/lib/native/compact_unelevate.dart`, `flutter/lib/web/compact_unelevate.dart` | new: restarts the installed app's main window with Explorer's rights when it runs elevated, as the update and the service switch leave it, since Windows blocks files dragged from Explorer into an elevated window; and the stub for the web build |
 | `flutter/lib/desktop/pages/desktop_home_page.dart` | 5 lines: imports, show the compact window, pass dropped files on |
 | `flutter/lib/desktop/pages/file_manager_tab_page.dart` | 3 lines: import and the dropped-files hook |
 | `flutter/lib/desktop/pages/file_manager_page.dart` | 3 lines: import, and the remote pane's drop handler calls the same code (RustDesk's sent the files the wrong way) |
@@ -49,6 +50,7 @@ The protocol and configuration are those of the upstream tag, so a build works w
 | `flutter/lib/common/widgets/toolbar.dart` | 7 lines: import and the menu entry |
 | `flutter/lib/desktop/pages/remote_page.dart` | 11 lines: imports, unfiltered drawing at 100%, the arrow without a cursor shape, the drop area around the remote screen |
 | `flutter/lib/desktop/pages/desktop_setting_page.dart` | 12 lines: imports, Scale down as a default view style, the release tag in About |
+| `flutter/lib/main.dart` | 3 lines: import and the restart hook for an elevated main window |
 | `.github/workflows/compact-windows.yml` | new: builds the Windows x64 exe and publishes a release |
 | `.github/README.md`, `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` | new: this project's pages, shown instead of RustDesk's copies in `docs/` |
 | `.github/pull_request_template.md` | new: pull request checklist |

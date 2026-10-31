@@ -17,6 +17,8 @@ import 'package:flutter_hbb/desktop/screen/desktop_remote_screen.dart';
 import 'package:flutter_hbb/desktop/screen/desktop_terminal_screen.dart';
 import 'package:flutter_hbb/desktop/widgets/refresh_wrapper.dart';
 import 'package:flutter_hbb/models/state_model.dart';
+import 'package:flutter_hbb/native/compact_unelevate.dart'
+    if (dart.library.html) 'package:flutter_hbb/web/compact_unelevate.dart';
 import 'package:flutter_hbb/utils/multi_window_manager.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
@@ -133,6 +135,7 @@ Future<void> initEnv(String appType) async {
 void runMainApp(bool startService) async {
   // register uni links
   await initEnv(kAppTypeMain);
+  if (isWindows && kBootArgs.isEmpty) compactRelaunchUnelevated();
   checkUpdate();
   // trigger connection status updater
   await bind.mainCheckConnectStatus();
