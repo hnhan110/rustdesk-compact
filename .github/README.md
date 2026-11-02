@@ -18,11 +18,13 @@
 - Drag files or folders from Explorer onto a remote screen to send them. With file copy and paste on (the default) and a Windows remote side that allows file transfer, they are pasted where you drop them, into the Explorer window or the desktop under the pointer, through the session's file clipboard; the remote side's Explorer shows its own copy window, and your clipboard now holds the files, as Copy in Explorer does. Drop on an empty spot of the target folder: a drop on a folder icon pastes beside it. Otherwise the file transfer window for that device opens, and they go to the folder its remote pane shows (the last one you used there, or the home folder), with the usual progress list and the usual question when a file exists already. Dropping them on that remote pane does the same (RustDesk's own drop zone there received nothing on Windows).
 - New connections start with Scale down, the remote cursor shown, the VP9 codec and file copy and paste on (Ctrl+C a file in Explorer on one side, Ctrl+V in Explorer on the other, Windows to Windows). These defaults are set once, on first start or on updating from an earlier build (1.5.0-compact.2 meant to set them but kept only one); change them any time in Settings → Display. Each device you connected to before is brought to them once, at its next connection: Scale original or adaptive becomes Scale down, and the remote cursor and file copy and paste are turned on, each while it is the default. Scale custom stays, and what you change for a device afterwards is kept.
 
-Builds are Windows x64 only.
+Windows x64 is the main build. macOS (Apple silicon and Intel) and Linux x64 builds of the same source come with each release from 1.5.0-compact.5 on, with less testing. On those systems the compact window shows RustDesk's own cards for missing permissions (macOS) and Wayland or SELinux (Linux), the app does not offer updates, and files dropped on a remote screen are not pasted where they land.
 
 ## Download
 
 [Releases](https://github.com/hnhan110/rustdesk-compact/releases) contain `rustdesk-<version>-compact.<n>-x86_64.exe` and `SHA256SUMS.txt`. The exe is the same kind of installer as the official `rustdesk-<version>-x86_64.exe`: run it and press Install in the sidebar, or install with `--silent-install`. Builds are not code-signed.
+
+From 1.5.0-compact.5 on, releases also contain `rustdesk-<version>-compact.<n>-aarch64.dmg` (Mac with Apple silicon), `rustdesk-<version>-compact.<n>-x86_64.dmg` (Intel Mac), `rustdesk-<version>-compact.<n>-x86_64.deb` (Debian, Ubuntu and their derivatives) and their checksums in `SHA256SUMS-macos-linux.txt`. The Mac app is signed ad hoc only, so macOS blocks it on first start: allow it under System Settings → Privacy & Security → Open Anyway. macOS may ask for its permissions again after each new version. Update by installing the new dmg or deb over the old one.
 
 The protocol and configuration are those of the upstream tag, so a build works with official RustDesk clients and servers of the same version. Turn automatic updates off on the installed client (`rustdesk.exe --option allow-auto-update N`, as administrator), otherwise the updater replaces it with the official build.
 
@@ -39,7 +41,7 @@ The protocol and configuration are those of the upstream tag, so a build works w
 | `flutter/lib/desktop/pages/compact_file_drop.dart` | new: files dropped on a remote screen, pasted through the file clipboard or sent through the file transfer window |
 | `flutter/lib/native/compact_file_clipboard.dart`, `flutter/lib/web/compact_file_clipboard.dart` | new: puts the dropped files on the Windows clipboard, and the stub for the web build |
 | `flutter/lib/native/compact_unelevate.dart`, `flutter/lib/web/compact_unelevate.dart` | new: restarts the installed app's main window with Explorer's rights when it runs elevated, as the update and the service switch leave it, since Windows blocks files dragged from Explorer into an elevated window; and the stub for the web build |
-| `flutter/lib/desktop/pages/desktop_home_page.dart` | 5 lines: imports, show the compact window, pass dropped files on |
+| `flutter/lib/desktop/pages/desktop_home_page.dart` | 11 lines: imports, show the compact window with the stock permission and warning cards outside Windows, pass dropped files on |
 | `flutter/lib/desktop/pages/file_manager_tab_page.dart` | 3 lines: import and the dropped-files hook |
 | `flutter/lib/desktop/pages/file_manager_page.dart` | 3 lines: import, and the remote pane's drop handler calls the same code (RustDesk's sent the files the wrong way) |
 | `flutter/windows/runner/flutter_window.cpp` | 3 lines: the drop plugin for the remote and file transfer windows; RustDesk registers it for the main window only |
@@ -52,6 +54,7 @@ The protocol and configuration are those of the upstream tag, so a build works w
 | `flutter/lib/desktop/pages/desktop_setting_page.dart` | 12 lines: imports, Scale down as a default view style, the release tag in About |
 | `flutter/lib/main.dart` | 3 lines: import and the restart hook for an elevated main window |
 | `.github/workflows/compact-windows.yml` | new: builds the Windows x64 exe and publishes a release |
+| `.github/workflows/compact-macos-linux.yml` | new: builds the macOS dmgs and the Linux deb and adds them to that release |
 | `.github/README.md`, `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` | new: this project's pages, shown instead of RustDesk's copies in `docs/` |
 | `.github/pull_request_template.md` | new: pull request checklist |
 | `.github/ISSUE_TEMPLATE/` | replaced: issue forms for this project |
@@ -70,11 +73,17 @@ The first build of an upstream version takes about an hour: it compiles the C/C+
 gh workflow run compact-windows.yml -R hnhan110/rustdesk-compact --ref main -f release-tag=1.5.0-compact.1
 ```
 
+After the Windows build has published a release, Actions → **macOS and Linux build** with the same `release-tag`, on the same commit, adds the dmgs and the deb to it. It refuses a release published from another commit, and leaves the exe and `SHA256SUMS.txt` alone, since installed Windows copies read them. With `publish` off it only builds, as the Windows build does.
+
+```bash
+gh workflow run compact-macos-linux.yml -R hnhan110/rustdesk-compact --ref main -f release-tag=1.5.0-compact.1
+```
+
 ## Moving to a new upstream version
 
 1. `git fetch https://github.com/rustdesk/rustdesk.git tag <tag> --no-tags`
 2. `git merge <tag>` on `main`. Conflicts, if any, are in the hooks or issue forms listed above.
-3. Compare the x64 steps of `build-for-windows-flutter` in `.github/workflows/flutter-build.yml` with `compact-windows.yml` (FLUTTER_VERSION, VCPKG_COMMIT_ID, RUST_VERSION, VERSION and the steps themselves).
+3. Compare the x64 steps of `build-for-windows-flutter` in `.github/workflows/flutter-build.yml` with `compact-windows.yml` (FLUTTER_VERSION, VCPKG_COMMIT_ID, RUST_VERSION, VERSION and the steps themselves), and `build-for-macOS` and the x86_64 part of `build-rustdesk-linux` with `compact-macos-linux.yml`.
 4. Push and run the workflow with `release-tag=<tag>-compact.1`.
 
 ## Contributing
