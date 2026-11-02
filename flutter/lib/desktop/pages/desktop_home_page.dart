@@ -61,7 +61,13 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   Widget build(BuildContext context) {
     super.build(context);
     final isIncomingOnly = bind.isIncomingOnly();
-    if (!isIncomingOnly) return _buildBlock(child: const CompactHomePage());
+    // Windows keeps the compact sidebar's own Install button instead. The
+    // empty URL leaves out the card offering official RustDesk releases.
+    if (!isIncomingOnly) {
+      return _buildBlock(
+          child: CompactHomePage(
+              helpCards: isWindows ? null : buildHelpCards('')));
+    }
     return _buildBlock(
         child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,

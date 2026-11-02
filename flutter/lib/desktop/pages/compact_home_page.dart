@@ -74,7 +74,10 @@ Future<void> _applyCompactDefaults() async {
 /// Compact main window: lists on the left, one box that both searches the
 /// list and takes a remote ID, and the peer list filling the rest.
 class CompactHomePage extends StatefulWidget {
-  const CompactHomePage({Key? key}) : super(key: key);
+  /// The stock left pane's cards: macOS permissions, Linux warnings.
+  final Widget? helpCards;
+
+  const CompactHomePage({Key? key, this.helpCards}) : super(key: key);
 
   @override
   State<CompactHomePage> createState() => _CompactHomePageState();
@@ -199,6 +202,7 @@ class _CompactHomePageState extends State<CompactHomePage> {
       child: Column(
         children: [
           Expanded(child: _buildNavigation(context, sectionLabel, mutedColor)),
+          if (widget.helpCards != null) widget.helpCards!,
           _buildInstall(),
           _buildVersion(context, mutedColor),
         ],
