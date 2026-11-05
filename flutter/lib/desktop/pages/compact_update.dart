@@ -50,6 +50,7 @@ Future<String?> _latestReleaseTag() async {
 /// checks stay quiet on errors, skip versions the user chose to skip, and do
 /// nothing in development or portable builds.
 Future<void> compactCheckForUpdate({required bool manual}) async {
+  if (isMacOS || isLinux) return _compactNotifyUpdate(manual: manual);
   if (!isWindows) return;
   if (!bind.mainIsInstalled()) {
     if (manual) showToast(translate('Install RustDesk to get updates'));
@@ -71,6 +72,52 @@ Future<void> compactCheckForUpdate({required bool manual}) async {
     return;
   }
   _showUpdateDialog(latestTag);
+}
+
+/// macOS and Linux: the same check, but it only tells the user about the
+/// release; the dmg or deb is installed by hand.
+Future<void> _compactNotifyUpdate({required bool manual}) async {
+  final current = _parseRelease(kCompactRelease);
+  if (current == null && !manual) return;
+  final latestTag = await _latestReleaseTag();
+  final latest = latestTag == null ? null : _parseRelease(latestTag);
+  if (latestTag == null || latest == null) {
+    if (manual) showToast(translate('Failed to check for updates'));
+    return;
+  }
+  if (current != null && !_isNewer(latest, current)) {
+    if (manual) showToast(translate('You have the latest version'));
+    return;
+  }
+  if (!manual && bind.getLocalFlutterOption(k: _kSkipOption) == latestTag) {
+    return;
+  }
+  _showNotifyDialog(latestTag);
+}
+
+void _showNotifyDialog(String tag) {
+  // The dmg and deb are added to a release up to an hour after the exe, so
+  // this opens the release page, which exists from the start, not a file link.
+  final pageUrl = 'https://github.com/$kCompactRepo/releases/tag/$tag';
+  gFFI.dialogManager.show((setState, close, context) {
+    return CustomAlertDialog(
+      title: Text(translate('Update available')),
+      content: Text('${translate('New version')}: $tag\n'
+          '${translate('Current version')}: $kCompactRelease'),
+      actions: [
+        dialogButton('Skip this version', isOutline: true, onPressed: () {
+          bind.setLocalFlutterOption(k: _kSkipOption, v: tag);
+          close();
+        }),
+        dialogButton('Later', isOutline: true, onPressed: close),
+        dialogButton('Download', onPressed: () {
+          launchUrlString(pageUrl);
+          close();
+        }),
+      ],
+      onCancel: close,
+    );
+  });
 }
 
 void _showUpdateDialog(String tag) {

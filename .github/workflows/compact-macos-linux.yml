@@ -492,6 +492,6 @@ jobs:
           popd
           gh release view "$TAG" --repo "$REPO" --json body -q .body > notes.md
           if ! grep -q 'SHA256SUMS-macos-linux.txt' notes.md; then
-            printf '\n\nmacOS (Apple silicon: aarch64, Intel: x86_64) and Linux x64 (.deb) builds of the same commit, checksums in SHA256SUMS-macos-linux.txt. They are not code-signed: on macOS, allow the app under System Settings > Privacy & Security > Open Anyway. The app offers updates on Windows only.\n' >> notes.md
+            printf '\n\nmacOS (Apple silicon: aarch64, Intel: x86_64) and Linux x64 (.deb) builds of the same commit, checksums in SHA256SUMS-macos-linux.txt. They are not code-signed: on macOS, allow the app under System Settings > Privacy & Security > Open Anyway. On macOS and Linux the app tells you about new releases but does not install them.\n' >> notes.md
             gh release edit "$TAG" --repo "$REPO" --notes-file notes.md
           fi
