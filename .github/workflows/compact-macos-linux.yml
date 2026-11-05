@@ -249,12 +249,17 @@ jobs:
       # build.py adds the service binary after Xcode signed the app, which
       # breaks the seal; an app with a broken signature is reported as damaged
       # on Apple silicon instead of offering "Open Anyway".
+      # Not sign-macos-app.sh: it turns on the hardened runtime, whose library
+      # validation refuses frameworks without a Team ID, as ad hoc ones are, so
+      # the app quit at launch ("mapped file has no Team ID").
       - name: Sign ad hoc
         run: |
-          bash ./.github/scripts/sign-macos-app.sh \
-            ./flutter/build/macos/Build/Products/Release/RustDesk.app \
-            - \
-            ./flutter/macos/Runner/Release.entitlements
+          app=./flutter/build/macos/Build/Products/Release/RustDesk.app
+          codesign --force --sign - "$app/Contents/MacOS/service"
+          codesign --force --deep --sign - "$app"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          codesign -dv "$app"
+          "$app/Contents/MacOS/RustDesk" --version
 
       - name: Create dmg
         run: |
