@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hbb/common.dart';
+import 'package:flutter_hbb/common/widgets/address_book.dart';
 import 'package:flutter_hbb/common/widgets/login.dart';
 import 'package:flutter_hbb/common/widgets/peer_card.dart';
 import 'package:flutter_hbb/common/widgets/peers_view.dart';
@@ -19,6 +20,7 @@ import 'package:flutter_hbb/models/server_model.dart';
 import 'package:flutter_hbb/utils/multi_window_manager.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 // v1, in 1.5.0-compact.2, sent all three writes at once; each one loads,
 // changes and stores the whole defaults file, so only the last was kept.
@@ -504,6 +506,7 @@ class _CompactHomePageState extends State<CompactHomePage> {
           },
         ),
         const Spacer(),
+        _buildAbActions(context, tab),
         Obx(() {
           final sort = compactSortMode.value;
           final onlineOnly = sort.endsWith(kCompactOnlineOnlySuffix);
@@ -532,6 +535,54 @@ class _CompactHomePageState extends State<CompactHomePage> {
         }),
       ],
     ).marginOnly(bottom: 6);
+  }
+
+  /// The stock window offers these in the address book's tags panel menu and
+  /// toolbar, under the same conditions; this window has no tags panel.
+  Widget _buildAbActions(BuildContext context, int tab) {
+    if (tab != PeerTabIndex.ab.index) return const SizedBox.shrink();
+    final mutedColor =
+        Theme.of(context).textTheme.titleLarge?.color?.withOpacity(0.6);
+    return Obx(() {
+      final ab = gFFI.abModel;
+      if (!gFFI.userModel.isLogin || !ab.current.canWrite()) {
+        return const SizedBox.shrink();
+      }
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(6),
+            onTap: compactAddIdToCurrentAb,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.add, size: 16, color: MyTheme.accent),
+                const SizedBox(width: 4),
+                Text(translate('Add ID'),
+                    style: TextStyle(fontSize: 13, color: MyTheme.accent)),
+              ],
+            ).paddingSymmetric(horizontal: 6, vertical: 4),
+          ),
+          if (!ab.legacyMode.value)
+            Tooltip(
+              message: translate('ab_web_console_tip'),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(6),
+                onTap: () async {
+                  final url = await bind.mainGetApiServer();
+                  if (await canLaunchUrlString(url)) {
+                    launchUrlString(url);
+                  }
+                },
+                child: Icon(Icons.open_in_new, size: 16, color: mutedColor)
+                    .paddingAll(4),
+              ),
+            ),
+          const SizedBox(width: 8),
+        ],
+      );
+    });
   }
 
   void _setSort(String mode, bool onlineOnly) {

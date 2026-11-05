@@ -5,6 +5,7 @@
 ## What is different
 
 - A sidebar with Recent sessions, Favorites and each address book, with device counts.
+- Above an address book you can write to: Add ID, to add a device by its ID with an alias, note and tags, and a button that opens the web console. The stock window has them in the address book's tags panel menu and toolbar, which this window does not show.
 - One box that searches the list or takes a remote ID. Enter connects to the typed ID, or to the first device in the list.
 - One row per device: online status, name and ID, with connect and file transfer buttons on hover and the usual ⋮ menu.
 - Online devices first, sorted by name (natural order, so "9" comes before "10") or by ID, and an "Online only" filter.
@@ -47,6 +48,7 @@ The protocol and configuration are those of the upstream tag, so a build works w
 | `flutter/windows/runner/flutter_window.cpp` | 3 lines: the drop plugin for the remote and file transfer windows; RustDesk registers it for the main window only |
 | `flutter/lib/common/widgets/peer_card.dart` | 3 lines: `part` directive and the row hook |
 | `flutter/lib/common/widgets/peers_view.dart` | 10 lines: row height, no margins, sorting |
+| `flutter/lib/common/widgets/address_book.dart` | 4 lines: the Add ID dialog, callable without the tags panel |
 | `flutter/lib/models/compact_view_style.dart` | new: the "Scale down" view style, the display defaults for each device, and why the remote cursor position no longer takes the mouse |
 | `flutter/lib/models/model.dart` | 4 lines: import, the scale hook, the defaults on session start, the remote cursor position hook |
 | `flutter/lib/common/widgets/toolbar.dart` | 7 lines: import and the menu entry |

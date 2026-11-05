@@ -887,6 +887,10 @@ class AddressBookTag extends StatelessWidget {
   }
 }
 
+// The compact window shows address books without the tags panel, whose menu
+// holds this dialog; the dialog uses none of the panel's state.
+void compactAddIdToCurrentAb() => _AddressBookState().addIdToCurrentAb();
+
 MenuEntryButton<String> getEntry(String title, VoidCallback proc) {
   return MenuEntryButton<String>(
     childBuilder: (TextStyle? style) => Text(
