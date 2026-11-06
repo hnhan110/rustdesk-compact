@@ -17,6 +17,7 @@
 - With the remote cursor shown, a remote pointer that moves by itself (a nudged mouse, a busy remote side reporting late) no longer takes the mouse from you. RustDesk then dropped your input for a second, and after that until you moved the mouse quickly, so a click on a file could do nothing. The drawn cursor still follows the remote pointer, and input behaves as with the remote cursor hidden.
 - An Install button at the bottom of the sidebar when the exe runs without being installed ("Click to upgrade" over an older installed version), as the stock window has in its left pane.
 - Drag files or folders from Explorer onto a remote screen to send them. With file copy and paste on (the default) and a Windows remote side that allows file transfer, they are pasted where you drop them, into the Explorer window or the desktop under the pointer, through the session's file clipboard; the remote side's Explorer shows its own copy window, and your clipboard now holds the files, as Copy in Explorer does. Drop on an empty spot of the target folder: a drop on a folder icon pastes beside it. Otherwise the file transfer window for that device opens, and they go to the folder its remote pane shows (the last one you used there, or the home folder), with the usual progress list and the usual question when a file exists already. Dropping them on that remote pane does the same (RustDesk's own drop zone there received nothing on Windows).
+- Pasting files on a remote side running RustDesk 1.3.8 or later (Ctrl+V, or a drop as above) starts at once. The file list now carries each file's size, so the remote side no longer asks for the sizes one at a time each time Explorer reads the list, which it does several times before copying: with 50 files over a relay server that was about 40 seconds with nothing on screen. Older remote sides get the list as before, since they would paste every file empty.
 - New connections start with Scale down, the remote cursor shown, the VP9 codec and file copy and paste on (Ctrl+C a file in Explorer on one side, Ctrl+V in Explorer on the other, Windows to Windows). These defaults are set once, on first start or on updating from an earlier build (1.5.0-compact.2 meant to set them but kept only one); change them any time in Settings → Display. Each device you connected to before is brought to them once, at its next connection: Scale original or adaptive becomes Scale down, and the remote cursor and file copy and paste are turned on, each while it is the default. Scale custom stays, and what you change for a device afterwards is kept.
 
 Windows x64 is the main build. macOS (Apple silicon and Intel) and Linux x64 builds of the same source come with each release from 1.5.0-compact.5 on, with less testing. On those systems the compact window shows RustDesk's own cards for missing permissions (macOS) and Wayland or SELinux (Linux), the update check only tells you about a newer release and opens its page, where you download the dmg or deb and install it over the old one, and files dropped on a remote screen are not pasted where they land.
@@ -55,13 +56,16 @@ The protocol and configuration are those of the upstream tag, so a build works w
 | `flutter/lib/desktop/pages/remote_page.dart` | 11 lines: imports, unfiltered drawing at 100%, the arrow without a cursor shape, the drop area around the remote screen |
 | `flutter/lib/desktop/pages/desktop_setting_page.dart` | 12 lines: imports, Scale down as a default view style, the release tag in About |
 | `flutter/lib/main.dart` | 3 lines: import and the restart hook for an elevated main window |
+| `libs/clipboard/src/windows/wf_cliprdr.c` | 20 lines: file sizes in the next file list it sends, when asked to |
+| `libs/clipboard/src/platform/windows.rs` | 23 lines: asks for the sizes when the remote side reads them (1.3.8 or later), and a test |
+| `src/client/io_loop.rs` | 2 lines: the hook before each file clipboard message from the remote side |
 | `.github/workflows/compact-windows.yml` | new: builds the Windows x64 exe and publishes a release |
 | `.github/workflows/compact-macos-linux.yml` | new: builds the macOS dmgs and the Linux deb and adds them to that release |
 | `.github/README.md`, `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` | new: this project's pages, shown instead of RustDesk's copies in `docs/` |
 | `.github/pull_request_template.md` | new: pull request checklist |
 | `.github/ISSUE_TEMPLATE/` | replaced: issue forms for this project |
 
-No Rust code, configuration or version number is changed.
+The only Rust and C changes are the three file clipboard ones above; no configuration or version number is changed.
 
 ## Build
 

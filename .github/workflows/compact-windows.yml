@@ -34,7 +34,7 @@ env:
 
 jobs:
   # bridge.yml's default job, with its output cached on the Rust sources:
-  # the bridge only changes when Rust changes, which this project never does.
+  # the bridge only changes when Rust changes.
   generate-bridge:
     runs-on: ubuntu-22.04
     steps:

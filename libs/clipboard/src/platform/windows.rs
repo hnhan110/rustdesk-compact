@@ -521,6 +521,7 @@ extern "C" {
     pub(crate) fn init_cliprdr(context: *mut CliprdrClientContext) -> BOOL;
     pub(crate) fn uninit_cliprdr(context: *mut CliprdrClientContext) -> BOOL;
     pub(crate) fn empty_cliprdr(context: *mut CliprdrClientContext, connID: UINT32) -> BOOL;
+    fn wf_cliprdr_set_send_file_sizes(enable: BOOL);
     #[cfg(test)]
     fn wf_cliprdr_file_descriptor_name_valid(name: *const WCHAR) -> BOOL;
 }
@@ -863,6 +864,20 @@ pub fn server_format_list_response(
             ERR_CODE_SERVER_FUNCTION_NONE
         }
     }
+}
+
+/// Peers from 1.3.8 on take each file's size from the file list when FD_FILESIZE is set. Without
+/// it they ask for every size, one round trip per file, each time Explorer reads the list, which
+/// it does several times before a paste starts. Older peers would paste every file empty.
+pub fn send_file_sizes_if_supported(msg: &ClipboardFile, peer_version: i64) {
+    let is_format_data_request = matches!(msg, ClipboardFile::FormatDataRequest { .. });
+    if is_format_data_request && peer_reads_file_sizes(peer_version) {
+        unsafe { wf_cliprdr_set_send_file_sizes(TRUE) }
+    }
+}
+
+fn peer_reads_file_sizes(peer_version: i64) -> bool {
+    peer_version >= hbb_common::get_version_number("1.3.8")
 }
 
 pub fn server_format_data_request(
@@ -1399,5 +1414,13 @@ mod tests {
             unsafe { wf_cliprdr_file_descriptor_name_valid(wide_name.as_ptr()) },
             FALSE
         );
+    }
+
+    #[test]
+    fn file_sizes_go_only_to_peers_that_read_them() {
+        assert!(!peer_reads_file_sizes(0));
+        assert!(!peer_reads_file_sizes(hbb_common::get_version_number("1.3.7")));
+        assert!(peer_reads_file_sizes(hbb_common::get_version_number("1.3.8")));
+        assert!(peer_reads_file_sizes(hbb_common::get_version_number("1.5.0")));
     }
 }

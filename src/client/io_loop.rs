@@ -2839,7 +2839,9 @@ impl<T: InvokeUiSession> Remote<T> {
                 if matches!(&clip, clipboard::ClipboardFile::FormatList { .. }) {
                     self.initial_clipboard_pending = false;
                 }
+                let peer_version = self.handler.lc.read().unwrap().version;
                 let _ = ContextSend::proc(|context| -> ResultType<()> {
+                    clipboard::platform::windows::send_file_sizes_if_supported(&clip, peer_version);
                     context
                         .server_clip_file(self.client_conn_id, clip)
                         .map_err(|e| e.into())

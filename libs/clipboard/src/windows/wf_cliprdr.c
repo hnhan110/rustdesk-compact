@@ -3288,6 +3288,14 @@ static BOOL wf_cliprdr_process_filename(wfClipboard *clipboard, WCHAR *wFileName
 	return TRUE;
 }
 
+/* Set for the next format data request only, under the clipboard context lock. */
+static BOOL g_send_file_sizes = FALSE;
+
+void wf_cliprdr_set_send_file_sizes(BOOL enable)
+{
+	g_send_file_sizes = enable;
+}
+
 /**
  * Function description
  *
@@ -3305,7 +3313,9 @@ wf_cliprdr_server_format_data_request(CliprdrClientContext *context,
 	UINT32 requestedFormatId;
 	CLIPRDR_FORMAT_DATA_RESPONSE response;
 	wfClipboard *clipboard;
+	BOOL sendFileSizes = g_send_file_sizes;
 
+	g_send_file_sizes = FALSE;
 	if (!context || !formatDataRequest)
 	{
 		return ERROR_INTERNAL_ERROR;
@@ -3469,6 +3479,16 @@ wf_cliprdr_server_format_data_request(CliprdrClientContext *context,
 			{
 				if (clipboard->fileDescriptor[i])
 					groupDsc->fgd[i] = *clipboard->fileDescriptor[i];
+			}
+
+			/* Before the list id is taken: the peer hashes the bytes it receives. */
+			if (sendFileSizes)
+			{
+				for (i = 0; i < clipboard->nFiles; i++)
+				{
+					if (clipboard->fileDescriptor[i])
+						groupDsc->fgd[i].dwFlags |= FD_FILESIZE;
+				}
 			}
 
 			buff = groupDsc;
